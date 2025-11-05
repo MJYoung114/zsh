@@ -5,10 +5,47 @@ if command -v node >/dev/null 2>&1; then
 node() {
     if [ $# -eq 1 ] && { [ "$1" = "--version" ] || [ "$1" = "-v" ]; }; then
         command node --version
-        echo "use fnm use <version> to change version"
+        echo "fnm use <version> to change version"
     else
         command node "$@"
     fi
 }
 fi
+
+# MJ commands store (per-type lists under ~/.config/mj-commands)
+_mj_cmd_dir="${XDG_CONFIG_HOME:-$HOME/.config}/mj-commands"
+
+mj-add() {
+  if [ $# -lt 1 ]; then
+    echo "usage: mj-add <type>" >&2
+    return 2
+  fi
+  local type="$1"
+  mkdir -p "$_mj_cmd_dir"
+  # Capture the previous command (not this mj-add invocation)
+  local prev
+  prev="$(fc -ln -2 | head -n1 | sed 's/^\s*//')"
+  if [ -z "$prev" ]; then
+    echo "no previous command found" >&2
+    return 1
+  fi
+  printf '%s\n' "$prev" >> "$_mj_cmd_dir/${type}.txt"
+  echo "added to ${type}: $prev"
+}
+
+mj-list() {
+  if [ $# -lt 1 ]; then
+    echo "usage: mj-list <type>" >&2
+    echo "available types:" >&2
+    command ls -1 "$_mj_cmd_dir" 2>/dev/null | sed 's/\.txt$//' >&2 || true
+    return 2
+  fi
+  local type="$1"
+  local file="$_mj_cmd_dir/${type}.txt"
+  if [ ! -f "$file" ]; then
+    echo "no entries for type: $type" >&2
+    return 1
+  fi
+  nl -ba "$file"
+}
 

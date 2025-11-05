@@ -77,6 +77,37 @@ link_to "config/aliasrc" "$HOME/.config/aliasrc"
 link_to "config/shortcutrc" "$HOME/.config/shortcutrc"
 link_to "config/functionsrc" "$HOME/.config/functionsrc"
 
+# Link a directory (symlink whole directory)
+link_dir() {
+  local src_rel="$1"   # e.g., config/mj-commands
+  local dst_abs="$2"   # e.g., $HOME/.config/mj-commands
+  local src="$dotfiles_dir/$src_rel"
+
+  if [ ! -d "$src" ]; then
+    echo "[SKIP] Missing source dir: $src" >&2
+    return 0
+  fi
+
+  if [ -L "$dst_abs" ]; then
+    local target
+    target="$(readlink "$dst_abs")"
+    if [ "$target" = "$src" ]; then
+      echo "[OK] Symlink already set: $dst_abs -> $src"
+      return 0
+    fi
+    echo "[MOVE] Existing symlink to backup: $dst_abs"
+    mv "$dst_abs" "$backup_dir/$(basename "$dst_abs").symlink"
+  elif [ -e "$dst_abs" ]; then
+    echo "[MOVE] Backing up existing path: $dst_abs"
+    mv "$dst_abs" "$backup_dir/$(basename "$dst_abs")"
+  fi
+
+  echo "[LINK] $dst_abs -> $src"
+  ln -s "$src" "$dst_abs"
+}
+
+link_dir "config/mj-commands" "$HOME/.config/mj-commands"
+
 echo "Backups saved to: $backup_dir"
 echo "Done."
 
