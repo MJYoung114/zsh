@@ -21,12 +21,13 @@ mj() {
 
   case "$cmd" in
     add)
-      if [ $# -lt 1 ]; then
-        echo "usage: mj add <type> [\"<description>\"]" >&2
+      if [ $# -lt 2 ]; then
+        echo "usage: mj add <type> <alias> [\"<description>\"]" >&2
         return 2
       fi
       local type="$1"
-      local desc="$2"
+      local mj_alias="$2"
+      local desc="${3:-}"
       mkdir -p "$_mj_cmd_dir"
       # Capture the previous command (not this mj invocation)
       local prev
@@ -35,12 +36,20 @@ mj() {
         echo "no previous command found" >&2
         return 1
       fi
+      # Disallow storing mj commands
+      case "$prev" in
+        mj\ *)
+          echo "refusing to add an mj command" >&2
+          return 1
+          ;;
+      esac
+      local file="$_mj_cmd_dir/${type}.txt"
       if [ -n "$desc" ]; then
-        printf '%s  # %s\n' "$prev" "$desc" >> "$_mj_cmd_dir/${type}.txt"
-        echo "added to ${type}: $prev  # $desc"
+        printf '%s\t%s  # %s\n' "$mj_alias" "$prev" "$desc" >> "$file"
+        echo "added [$mj_alias] to ${type}: $prev  # $desc"
       else
-        printf '%s\n' "$prev" >> "$_mj_cmd_dir/${type}.txt"
-        echo "added to ${type}: $prev"
+        printf '%s\t%s\n' "$mj_alias" "$prev" >> "$file"
+        echo "added [$mj_alias] to ${type}: $prev"
       fi
       ;;
     list)
@@ -59,33 +68,33 @@ mj() {
       ;;
     remove)
       if [ $# -lt 2 ]; then
-        echo "usage: mj remove <type> <index>" >&2
+        echo "usage: mj remove <type> <alias>" >&2
         return 2
       fi
       local type="$1"
-      local index="$2"
+      local mj_alias="$2"
       local file="$_mj_cmd_dir/${type}.txt"
       if [ ! -f "$file" ]; then
         echo "no entries for type: $type" >&2
         return 1
       fi
-      local total
-      total="$(wc -l < "$file" | tr -d ' ')"
-      if [ "$index" -lt 1 ] || [ "$index" -gt "$total" ]; then
-        echo "index out of range (1-$total)" >&2
-        return 1
-      fi
-      # Remove the line at index (sed -i is not portable, use temp file)
       local tmp
       tmp="$(mktemp)"
-      sed "${index}d" "$file" > "$tmp" && mv "$tmp" "$file"
-      echo "removed entry $index from ${type}"
+      # Keep lines that do NOT start with "alias<TAB>"
+      grep -v -E "^$(printf '%s' "$mj_alias" | sed 's/[].[^$*\\|?+(){}]/\\&/g')\t" "$file" > "$tmp" || true
+      if cmp -s "$file" "$tmp"; then
+        rm -f "$tmp"
+        echo "no entry found for alias: $mj_alias" >&2
+        return 1
+      fi
+      mv "$tmp" "$file"
+      echo "removed alias [$mj_alias] from ${type}"
       ;;
     *)
       echo "usage: mj {add|list|remove}" >&2
-      echo "  mj add <type> [\"<description>\"]" >&2
-      echo "  mj list <type>" >&2
-      echo "  mj remove <type> <index>" >&2
+      echo "  mj add <type> <alias> [\"<description>\"]" >&2
+      echo "  mj list [<type>]" >&2
+      echo "  mj remove <type> <alias>" >&2
       return 2
       ;;
   esac
