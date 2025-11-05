@@ -359,13 +359,27 @@ mj() {
             echo "no types available" >&2
             return 1
           fi
+          # Get current context for highlighting
+          local current_ctx
+          current_ctx="$(_mj_get_context)"
+          # Format types list with green highlight for current context
+          local formatted_types=""
+          for t in "${types[@]}"; do
+            if [ "$t" = "$current_ctx" ]; then
+              formatted_types+=$(printf '\033[32m%s\033[0m\n' "$t")  # Green
+            else
+              formatted_types+=$(printf '%s\n' "$t")
+            fi
+          done
           # Add "clear" option
-          types+=(clear)
+          formatted_types+=$(printf '%s\n' "clear")
           local selected
-          selected=$(printf '%s\n' "${types[@]}" | fzf --prompt="Select context: " --height=40% --reverse)
+          selected=$(echo "$formatted_types" | fzf --prompt="Select context: " --height=40% --reverse --ansi)
           if [ -z "$selected" ]; then
             return 1
           fi
+          # Strip ANSI codes from selection
+          selected=$(echo "$selected" | sed 's/\x1b\[[0-9;]*m//g')
           if [ "$selected" = "clear" ]; then
             rm -f "$_mj_ctx_file"
             echo "context cleared"
