@@ -22,18 +22,18 @@ mj() {
   case "$cmd" in
     add)
       if [ $# -lt 2 ]; then
-        echo "usage: mj add <type> <alias> [--i] [--d \"<description>\"]" >&2
+        echo "usage: mj add <type> <alias> [--i <param_name>] [--d \"<description>\"]" >&2
         return 2
       fi
       local type="$1"
       local mj_alias="$2"
       shift 2 || true
-      local input_flag=false
+      local input_param=""
       local desc=""
       while [ $# -gt 0 ]; do
         case "$1" in
           --i)
-            input_flag=true; shift ;;
+            shift; input_param="${1:-}"; [ $# -gt 0 ] && shift ;;
           --d)
             shift; desc="${1:-}"; [ $# -gt 0 ] && shift ;;
           *)
@@ -58,7 +58,7 @@ mj() {
       esac
       local file="$_mj_cmd_dir/${type}.txt"
       local flags_suffix=""
-      if [ "$input_flag" = true ]; then flags_suffix="  ##i"; fi
+      if [ -n "$input_param" ]; then flags_suffix="  ##i:$input_param"; fi
       if [ -n "$desc" ]; then
         printf '%s\t%s  # %s%s\n' "$mj_alias" "$prev" "$desc" "$flags_suffix" >> "$file"
         echo "added [$mj_alias] to ${type}: $prev  # $desc"
@@ -106,7 +106,7 @@ mj() {
       ;;
     use)
       if [ $# -lt 2 ]; then
-        echo "usage: mj use <type> <alias> [input]" >&2
+        echo "usage: mj use <type> <alias> [param_name=value|value]" >&2
         return 2
       fi
       local type="$1"
@@ -127,19 +127,41 @@ mj() {
       # Strip leading "alias<TAB>", then drop trailing  "  # desc" if present
       local cmd
       cmd="${line#*$'\t'}"
-      # Detect and remove flags token
-      local has_input=false
-      if [[ "$cmd" = *"  ##i"* ]]; then
-        has_input=true
-        cmd="${cmd%  ##i}"
+      # Detect and extract input parameter name from flags token
+      local input_param=""
+      local param_value=""
+      if [[ "$cmd" = *"  ##i:"* ]]; then
+        input_param="${cmd##*  ##i:}"
+        input_param="${input_param%%  # *}"
+        input_param="${input_param%% *}"
+        cmd="${cmd%  ##i:*}"
       fi
       cmd="${cmd%%  # *}"
-      if [ "$has_input" = true ]; then
-        if [ -z "$input_value" ]; then
-          echo "this alias requires an input argument" >&2
+      
+      # Parse input value: either "param_name=value" or just "value"
+      if [ -n "$input_value" ]; then
+        if [[ "$input_value" = *"="* ]]; then
+          # Format: param_name=value
+          local provided_param="${input_value%%=*}"
+          param_value="${input_value#*=}"
+          if [ -n "$input_param" ] && [ "$provided_param" != "$input_param" ]; then
+            echo "parameter name mismatch: expected '$input_param', got '$provided_param'" >&2
+            return 2
+          fi
+        else
+          # Format: just value (use stored param name)
+          param_value="$input_value"
+        fi
+      fi
+      
+      if [ -n "$input_param" ]; then
+        if [ -z "$param_value" ]; then
+          echo "this alias requires an input value for parameter: $input_param" >&2
           return 2
         fi
-        cmd="$cmd $input_value"
+        # Replace <param_name> in the command with the value
+        local placeholder="<$input_param>"
+        cmd="${cmd//$placeholder/$param_value}"
       fi
       echo "$cmd"
       eval "$cmd"
@@ -203,9 +225,9 @@ mj() {
       ;;
     *)
       echo "usage: mj {add|list|use|remove|describe}" >&2
-      echo "  mj add <type> <alias> [--i] [--d \"<description>\"]" >&2
+      echo "  mj add <type> <alias> [--i <param_name>] [--d \"<description>\"]" >&2
       echo "  mj list [<type> [--c]]" >&2
-      echo "  mj use <type> <alias> [input]" >&2
+      echo "  mj use <type> <alias> [param_name=value|value]" >&2
       echo "  mj remove <type> <alias>" >&2
       echo "  mj describe <type> <alias>" >&2
       return 2
