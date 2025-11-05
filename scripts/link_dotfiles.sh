@@ -40,6 +40,7 @@ link_one() {
 
 link_one ".zshrc"
 link_one ".zprofile"
+link_one ".vimrc"
 
 echo "Backups saved to: $backup_dir"
 echo "Done."
