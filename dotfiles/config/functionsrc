@@ -14,19 +14,57 @@ fi
 
 # MJ commands store (per-type lists under ~/.config/mj-commands)
 _mj_cmd_dir="${XDG_CONFIG_HOME:-$HOME/.config}/mj-commands"
+_mj_ctx_file="$_mj_cmd_dir/.context"
+
+_mj_get_context() {
+  if [ -f "$_mj_ctx_file" ]; then
+    cat "$_mj_ctx_file" 2>/dev/null | tr -d '\n' || echo ""
+  else
+    echo ""
+  fi
+}
+
+_mj_set_context() {
+  local type="$1"
+  echo "$type" > "$_mj_ctx_file" 2>/dev/null
+}
 
 mj() {
   local cmd="${1:-}"
   shift || true
+  
+  # If not a valid subcommand and context is set, treat as alias in context
+  if [ -n "$cmd" ] && [ "$cmd" != "use" ] && [ "$cmd" != "add" ] && [ "$cmd" != "add-cmd" ] && [ "$cmd" != "list" ] && [ "$cmd" != "remove" ] && [ "$cmd" != "describe" ] && [ "$cmd" != "ctx" ]; then
+    # Check if it's an alias in current context
+    local ctx
+    ctx="$(_mj_get_context)"
+    if [ -n "$ctx" ]; then
+      # Treat as: mj use <context> <alias> [args...]
+      local alias_name="$cmd"
+      cmd="use"
+      set -- "$ctx" "$alias_name" "$@"
+    fi
+  fi
 
   case "$cmd" in
     add)
-      if [ $# -lt 2 ]; then
-        echo "usage: mj add <type> <alias>" >&2
+      local type=""
+      local mj_alias=""
+      if [ $# -lt 1 ]; then
+        echo "usage: mj add [<type>] <alias>" >&2
         return 2
+      elif [ $# -eq 1 ]; then
+        # Use context if available
+        type="$(_mj_get_context)"
+        if [ -z "$type" ]; then
+          echo "usage: mj add <type> <alias> (or set context with 'mj ctx <type>')" >&2
+          return 2
+        fi
+        mj_alias="$1"
+      else
+        type="$1"
+        mj_alias="$2"
       fi
-      local type="$1"
-      local mj_alias="$2"
       mkdir -p "$_mj_cmd_dir"
       # Capture the most recent non-mj, non-"exec zsh" command from recent history
       local prev
@@ -82,9 +120,16 @@ mj() {
       ;;
     list)
       if [ $# -lt 1 ]; then
-        echo "available types:" >&2
-        command ls -1 "$_mj_cmd_dir" 2>/dev/null | sed 's/\.txt$//' >&2 || true
-        return 0
+        # Check if context is set
+        local ctx
+        ctx="$(_mj_get_context)"
+        if [ -n "$ctx" ]; then
+          set -- "$ctx"
+        else
+          echo "available types:" >&2
+          command ls -1 "$_mj_cmd_dir" 2>/dev/null | sed 's/\.txt$//' >&2 || true
+          return 0
+        fi
       fi
       local type="$1"
       local show_cmd=false
@@ -118,13 +163,25 @@ mj() {
       fi
       ;;
     use)
-      if [ $# -lt 2 ]; then
-        echo "usage: mj use <type> <alias> [param_name=value|value]" >&2
+      local type=""
+      local mj_alias=""
+      local input_value=""
+      if [ $# -lt 1 ]; then
+        echo "usage: mj use [<type>] <alias> [param_name=value|value]" >&2
         return 2
+      elif [ $# -eq 1 ]; then
+        # Use context if available
+        type="$(_mj_get_context)"
+        if [ -z "$type" ]; then
+          echo "usage: mj use <type> <alias> [param_name=value|value] (or set context with 'mj ctx <type>')" >&2
+          return 2
+        fi
+        mj_alias="$1"
+      else
+        type="$1"
+        mj_alias="$2"
+        input_value="${3:-}"
       fi
-      local type="$1"
-      local mj_alias="$2"
-      local input_value="${3:-}"
       local file="$_mj_cmd_dir/${type}.txt"
       if [ ! -f "$file" ]; then
         echo "no entries for type: $type" >&2
@@ -236,12 +293,40 @@ mj() {
         echo "command: $rest"
       fi
       ;;
+    ctx)
+      if [ $# -lt 1 ]; then
+        # Show current context
+        local ctx
+        ctx="$(_mj_get_context)"
+        if [ -n "$ctx" ]; then
+          echo "current context: $ctx"
+        else
+          echo "no context set"
+        fi
+        return 0
+      fi
+      local type="$1"
+      # Verify type exists
+      local file="$_mj_cmd_dir/${type}.txt"
+      if [ ! -f "$file" ] && [ "$type" != "clear" ]; then
+        echo "warning: type '$type' has no entries yet" >&2
+      fi
+      if [ "$type" = "clear" ]; then
+        rm -f "$_mj_ctx_file"
+        echo "context cleared"
+      else
+        _mj_set_context "$type"
+        echo "context set to: $type"
+      fi
+      ;;
     *)
-      echo "usage: mj {add|add-cmd|list|use|remove|describe}" >&2
-      echo "  mj add <type> <alias>                     # add last command" >&2
+      echo "usage: mj {add|add-cmd|list|use|remove|describe|ctx|<alias>}" >&2
+      echo "  mj ctx [<type>|clear]                    # set/show context" >&2
+      echo "  mj add [<type>] <alias>                 # add last command (uses context if type omitted)" >&2
       echo "  mj add-cmd <type> <alias> \"<cmd>\" [--i <param>] [--d \"<desc>\"]" >&2
-      echo "  mj list [<type> [--c]]" >&2
-      echo "  mj use <type> <alias> [param_name=value|value]" >&2
+      echo "  mj list [<type> [--c]]                   # list (uses context if type omitted)" >&2
+      echo "  mj use [<type>] <alias> [param=value]    # use (uses context if type omitted)" >&2
+      echo "  mj <alias> [args...]                     # use alias in current context (if context set)" >&2
       echo "  mj remove <type> <alias>" >&2
       echo "  mj describe <type> <alias>" >&2
       return 2

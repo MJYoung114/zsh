@@ -25,6 +25,7 @@ _mj() {
   local curcontext="$curcontext"
 
   subcommands=(
+    'ctx:set or show current context'
     'add:add the last terminal command'
     'add-cmd:add a command manually with optional input and description'
     'list:list commands (use --c to show commands)'
@@ -60,12 +61,22 @@ _mj() {
             '2:type:->types' \
             '3:flag:->list_flag'
           ;;
+        ctx)
+          _arguments \
+            '2:type:->types_or_clear'
+          ;;
         use|remove|describe)
           _arguments \
             '2:type:->types' \
             '3:alias:->aliases'
           ;;
       esac
+      ;;
+    types_or_clear)
+      local types
+      types=($(command ls -1 "$_mj_cmd_dir" 2>/dev/null | sed 's/\.txt$//' 2>/dev/null || true))
+      types+=(clear)
+      _describe 'types or clear' types
       ;;
     types)
       _mj_types
