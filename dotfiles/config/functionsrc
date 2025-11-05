@@ -66,6 +66,32 @@ mj() {
       fi
       nl -ba "$file"
       ;;
+    use)
+      if [ $# -lt 2 ]; then
+        echo "usage: mj use <type> <alias>" >&2
+        return 2
+      fi
+      local type="$1"
+      local mj_alias="$2"
+      local file="$_mj_cmd_dir/${type}.txt"
+      if [ ! -f "$file" ]; then
+        echo "no entries for type: $type" >&2
+        return 1
+      fi
+      # Find line starting with alias<TAB>
+      local line
+      line="$(grep -E "^$(printf '%s' "$mj_alias" | sed 's/[].[^$*\\|?+(){}]/\\&/g')\t" "$file" | head -n1)"
+      if [ -z "$line" ]; then
+        echo "alias not found: $mj_alias" >&2
+        return 1
+      fi
+      # Strip leading "alias<TAB>", then drop trailing  "  # desc" if present
+      local cmd
+      cmd="${line#*$'\t'}"
+      cmd="${cmd%%  # *}"
+      echo "$cmd"
+      eval "$cmd"
+      ;;
     remove)
       if [ $# -lt 2 ]; then
         echo "usage: mj remove <type> <alias>" >&2
