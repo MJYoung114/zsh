@@ -114,5 +114,3 @@ export AWS_PROFILE=envio
 export SOPS_AGE_KEY_FILE=/Users/mjyoung/Documents/envio.txt
 
  
-export PATH="/Users/mjyoung/Library/Application Support/fnm":/opt/homebrew/bin:/home/mjyoung/.fnm:/Users/mjyoung/bin:/Users/mjyoung/go/bin:/bin:/snap/bin:/home/jasoons/.deno/bin:/Users/mjyoung/bin:/Users/mjyoung/go/bin:/bin:/snap/bin:/usr/local/bin:/usr/local/sbin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/Users/mjyoung/.cargo/bin:/home/jasoons/.local/bin:/Users/mjyoung/.fzf/bin:/home/jasoons/.foundry/bin:/home/jasoons/.local/bin:/home/jasoons/.foundry/bin:/home/jasoons/.local/bin
-
