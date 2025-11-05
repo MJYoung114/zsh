@@ -76,6 +76,7 @@ link_to() {
 link_to "config/aliasrc" "$HOME/.config/aliasrc"
 link_to "config/shortcutrc" "$HOME/.config/shortcutrc"
 link_to "config/functionsrc" "$HOME/.config/functionsrc"
+link_to "config/_mj" "$HOME/.config/_mj"
 
 # Link a directory (symlink whole directory)
 link_dir() {

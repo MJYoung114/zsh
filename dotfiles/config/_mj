@@ -1,0 +1,81 @@
+#compdef mj
+
+_mj_cmd_dir="${XDG_CONFIG_HOME:-$HOME/.config}/mj-commands"
+
+_mj_types() {
+  local types
+  types=($(command ls -1 "$_mj_cmd_dir" 2>/dev/null | sed 's/\.txt$//' 2>/dev/null || true))
+  _describe 'types' types
+}
+
+_mj_aliases() {
+  local type="$1"
+  local file="$_mj_cmd_dir/${type}.txt"
+  if [ ! -f "$file" ]; then
+    return
+  fi
+  local aliases
+  aliases=($(awk -F'\t' '{print $1}' "$file" 2>/dev/null || true))
+  _describe 'aliases' aliases
+}
+
+_mj() {
+  local context state line
+  local -a subcommands
+  local curcontext="$curcontext"
+
+  subcommands=(
+    'add:add a command with optional input flag and description'
+    'list:list commands (use --c to show commands)'
+    'use:execute a stored command'
+    'remove:remove a stored command'
+    'describe:show details for a stored command'
+  )
+
+  _arguments \
+    '1:subcommand:->subcmd' \
+    '*::args:->args'
+
+  case $state in
+    subcmd)
+      _describe 'mj subcommands' subcommands
+      ;;
+    args)
+      case $words[2] in
+        add)
+          _arguments \
+            '2:type:->types' \
+            '3:alias:->aliases' \
+            '4:flags:->flags'
+          ;;
+        list)
+          _arguments \
+            '2:type:->types' \
+            '3:flag:->list_flag'
+          ;;
+        use|remove|describe)
+          _arguments \
+            '2:type:->types' \
+            '3:alias:->aliases'
+          ;;
+      esac
+      ;;
+    types)
+      _mj_types
+      ;;
+    aliases)
+      if [ -n "$words[3]" ]; then
+        _mj_aliases "$words[3]"
+      fi
+      ;;
+    flags)
+      _values 'flags' '--i[mark command as requiring input]' '--d[add description]'
+      ;;
+    list_flag)
+      _values 'flags' '--c[show full commands]'
+      ;;
+  esac
+}
+
+_mj "$@"
+

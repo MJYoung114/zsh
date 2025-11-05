@@ -1,3 +1,6 @@
+# Setup completion path before loading anything
+fpath=(~/.zsh/completion "$HOME/.config" $fpath)
+
 # Oh My Zsh (if installed)
 if [ -d "$HOME/.oh-my-zsh" ]; then
   export ZSH="$HOME/.oh-my-zsh"
@@ -36,9 +39,8 @@ fi
 # uninstall by removing these lines
 [[ -f ~/.config/tabtab/__tabtab.zsh ]] && . ~/.config/tabtab/__tabtab.zsh || true
 
-# Setup completion (only if OMZ not present; OMZ runs compinit)
+# Only run compinit if OMZ not present (OMZ runs it)
 if [ ! -d "$HOME/.oh-my-zsh" ]; then
-  fpath=(~/.zsh/completion $fpath)
   autoload -Uz compinit && compinit -i
 fi
 
