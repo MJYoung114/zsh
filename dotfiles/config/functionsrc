@@ -60,12 +60,35 @@ mj() {
         return 0
       fi
       local type="$1"
+      local show_cmd=false
+      if [ "$2" = "--c" ]; then
+        show_cmd=true
+      fi
       local file="$_mj_cmd_dir/${type}.txt"
       if [ ! -f "$file" ]; then
         echo "no entries for type: $type" >&2
         return 1
       fi
-      nl -ba "$file"
+      if [ "$show_cmd" = true ]; then
+        # Show full format: alias<TAB>command  # description
+        nl -ba "$file"
+      else
+        # Show only alias and description
+        local line_num=1
+        while IFS= read -r line; do
+          # Parse: alias<TAB>command  # description or alias<TAB>command
+          local alias_part="${line%%$'\t'*}"
+          local rest="${line#*$'\t'}"
+          if [[ "$rest" = *"  # "* ]]; then
+            local cmd_part="${rest%%  # *}"
+            local desc_part="${rest#*  # }"
+            printf "%6d  %s  # %s\n" "$line_num" "$alias_part" "$desc_part"
+          else
+            printf "%6d  %s\n" "$line_num" "$alias_part"
+          fi
+          ((line_num++))
+        done < "$file"
+      fi
       ;;
     use)
       if [ $# -lt 2 ]; then
@@ -117,11 +140,46 @@ mj() {
       mv "$tmp" "$file"
       echo "removed alias [$mj_alias] from ${type}"
       ;;
+    describe)
+      if [ $# -lt 2 ]; then
+        echo "usage: mj describe <type> <alias>" >&2
+        return 2
+      fi
+      local type="$1"
+      local mj_alias="$2"
+      local file="$_mj_cmd_dir/${type}.txt"
+      if [ ! -f "$file" ]; then
+        echo "no entries for type: $type" >&2
+        return 1
+      fi
+      # Find line starting with alias<TAB>
+      local line
+      line="$(grep -E "^$(printf '%s' "$mj_alias" | sed 's/[].[^$*\\|?+(){}]/\\&/g')\t" "$file" | head -n1)"
+      if [ -z "$line" ]; then
+        echo "alias not found: $mj_alias" >&2
+        return 1
+      fi
+      # Parse: alias<TAB>command  # description or alias<TAB>command
+      local alias_part="${line%%$'\t'*}"
+      local rest="${line#*$'\t'}"
+      if [[ "$rest" = *"  # "* ]]; then
+        local cmd_part="${rest%%  # *}"
+        local desc_part="${rest#*  # }"
+        echo "alias: $alias_part"
+        echo "command: $cmd_part"
+        echo "description: $desc_part"
+      else
+        echo "alias: $alias_part"
+        echo "command: $rest"
+      fi
+      ;;
     *)
-      echo "usage: mj {add|list|remove}" >&2
+      echo "usage: mj {add|list|use|remove|describe}" >&2
       echo "  mj add <type> <alias> [\"<description>\"]" >&2
-      echo "  mj list [<type>]" >&2
+      echo "  mj list [<type> [--c]]" >&2
+      echo "  mj use <type> <alias>" >&2
       echo "  mj remove <type> <alias>" >&2
+      echo "  mj describe <type> <alias>" >&2
       return 2
       ;;
   esac
