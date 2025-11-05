@@ -120,16 +120,10 @@ mj() {
       ;;
     list)
       if [ $# -lt 1 ]; then
-        # Check if context is set
-        local ctx
-        ctx="$(_mj_get_context)"
-        if [ -n "$ctx" ]; then
-          set -- "$ctx"
-        else
-          echo "available types:" >&2
-          command ls -1 "$_mj_cmd_dir" 2>/dev/null | sed 's/\.txt$//' >&2 || true
-          return 0
-        fi
+        # Always show all types when no type specified
+        echo "available types:" >&2
+        command ls -1 "$_mj_cmd_dir" 2>/dev/null | sed 's/\.txt$//' >&2 || true
+        return 0
       fi
       local type="$1"
       local show_cmd=false
