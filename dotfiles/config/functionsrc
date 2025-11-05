@@ -29,9 +29,10 @@ mj() {
       local mj_alias="$2"
       local desc="${3:-}"
       mkdir -p "$_mj_cmd_dir"
-      # Capture the previous command (not this mj invocation)
+      # Capture the most recent non-mj, non-"exec zsh" command from recent history
       local prev
-      prev="$(fc -ln -2 | head -n1 | sed 's/^\s*//')"
+      prev="$(fc -ln -30 | awk 'BEGIN{IGNORECASE=1} !/^[[:space:]]*mj([[:space:]]|$)/ && !/^[[:space:]]*exec[[:space:]]+zsh([[:space:]]|$)/ && NF{last=$0} END{print last}')"
+      prev="${prev##\ }"
       if [ -z "$prev" ]; then
         echo "no previous command found" >&2
         return 1
