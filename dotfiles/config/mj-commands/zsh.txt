@@ -1,0 +1,2 @@
+link	~/zsh/scripts/link_dotfiles.sh  # link dot files
+restart-cmd	exec zsh -l  # restart zsh command
