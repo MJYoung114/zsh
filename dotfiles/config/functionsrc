@@ -22,12 +22,24 @@ mj() {
   case "$cmd" in
     add)
       if [ $# -lt 2 ]; then
-        echo "usage: mj add <type> <alias> [\"<description>\"]" >&2
+        echo "usage: mj add <type> <alias> [--i] [--d \"<description>\"]" >&2
         return 2
       fi
       local type="$1"
       local mj_alias="$2"
-      local desc="${3:-}"
+      shift 2 || true
+      local input_flag=false
+      local desc=""
+      while [ $# -gt 0 ]; do
+        case "$1" in
+          --i)
+            input_flag=true; shift ;;
+          --d)
+            shift; desc="${1:-}"; [ $# -gt 0 ] && shift ;;
+          *)
+            shift ;;
+        esac
+      done
       mkdir -p "$_mj_cmd_dir"
       # Capture the most recent non-mj, non-"exec zsh" command from recent history
       local prev
@@ -45,11 +57,13 @@ mj() {
           ;;
       esac
       local file="$_mj_cmd_dir/${type}.txt"
+      local flags_suffix=""
+      if [ "$input_flag" = true ]; then flags_suffix="  ##i"; fi
       if [ -n "$desc" ]; then
-        printf '%s\t%s  # %s\n' "$mj_alias" "$prev" "$desc" >> "$file"
+        printf '%s\t%s  # %s%s\n' "$mj_alias" "$prev" "$desc" "$flags_suffix" >> "$file"
         echo "added [$mj_alias] to ${type}: $prev  # $desc"
       else
-        printf '%s\t%s\n' "$mj_alias" "$prev" >> "$file"
+        printf '%s\t%s%s\n' "$mj_alias" "$prev" "$flags_suffix" >> "$file"
         echo "added [$mj_alias] to ${type}: $prev"
       fi
       ;;
@@ -92,11 +106,12 @@ mj() {
       ;;
     use)
       if [ $# -lt 2 ]; then
-        echo "usage: mj use <type> <alias>" >&2
+        echo "usage: mj use <type> <alias> [input]" >&2
         return 2
       fi
       local type="$1"
       local mj_alias="$2"
+      local input_value="${3:-}"
       local file="$_mj_cmd_dir/${type}.txt"
       if [ ! -f "$file" ]; then
         echo "no entries for type: $type" >&2
@@ -112,7 +127,20 @@ mj() {
       # Strip leading "alias<TAB>", then drop trailing  "  # desc" if present
       local cmd
       cmd="${line#*$'\t'}"
+      # Detect and remove flags token
+      local has_input=false
+      if [[ "$cmd" = *"  ##i"* ]]; then
+        has_input=true
+        cmd="${cmd%  ##i}"
+      fi
       cmd="${cmd%%  # *}"
+      if [ "$has_input" = true ]; then
+        if [ -z "$input_value" ]; then
+          echo "this alias requires an input argument" >&2
+          return 2
+        fi
+        cmd="$cmd $input_value"
+      fi
       echo "$cmd"
       eval "$cmd"
       ;;
@@ -175,9 +203,9 @@ mj() {
       ;;
     *)
       echo "usage: mj {add|list|use|remove|describe}" >&2
-      echo "  mj add <type> <alias> [\"<description>\"]" >&2
+      echo "  mj add <type> <alias> [--i] [--d \"<description>\"]" >&2
       echo "  mj list [<type> [--c]]" >&2
-      echo "  mj use <type> <alias>" >&2
+      echo "  mj use <type> <alias> [input]" >&2
       echo "  mj remove <type> <alias>" >&2
       echo "  mj describe <type> <alias>" >&2
       return 2
