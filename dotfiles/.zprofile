@@ -14,6 +14,13 @@ if [[ "$OSTYPE" == darwin* ]]; then
 fi
 
 #
+# Homebrew (macOS)
+#
+if [[ "$OSTYPE" == darwin* ]] && [ -d "/opt/homebrew" ]; then
+  eval "$(/opt/homebrew/bin/brew shellenv)"
+fi
+
+#
 # Editors
 #
 
@@ -62,6 +69,8 @@ if (( $#commands[(i)lesspipe(|.sh)] )); then
   export LESSOPEN="| /usr/bin/env $commands[(i)lesspipe(|.sh)] %s 2>&-"
 fi
 
-# Created by `pipx` on 2022-11-01 12:10:42
-export PATH="$PATH:/home/jasoons/.local/bin"
+# Ensure user-local bin (pipx, custom tools) is in PATH if present
+if [ -d "$HOME/.local/bin" ]; then
+  export PATH="$PATH:$HOME/.local/bin"
+fi
 
