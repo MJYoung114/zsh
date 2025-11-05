@@ -22,24 +22,11 @@ mj() {
   case "$cmd" in
     add)
       if [ $# -lt 2 ]; then
-        echo "usage: mj add <type> <alias> [--i <param_name>] [--d \"<description>\"]" >&2
+        echo "usage: mj add <type> <alias>" >&2
         return 2
       fi
       local type="$1"
       local mj_alias="$2"
-      shift 2 || true
-      local input_param=""
-      local desc=""
-      while [ $# -gt 0 ]; do
-        case "$1" in
-          --i)
-            shift; input_param="${1:-}"; [ $# -gt 0 ] && shift ;;
-          --d)
-            shift; desc="${1:-}"; [ $# -gt 0 ] && shift ;;
-          *)
-            shift ;;
-        esac
-      done
       mkdir -p "$_mj_cmd_dir"
       # Capture the most recent non-mj, non-"exec zsh" command from recent history
       local prev
@@ -57,14 +44,40 @@ mj() {
           ;;
       esac
       local file="$_mj_cmd_dir/${type}.txt"
+      printf '%s\t%s\n' "$mj_alias" "$prev" >> "$file"
+      echo "added [$mj_alias] to ${type}: $prev"
+      ;;
+    add-cmd)
+      if [ $# -lt 3 ]; then
+        echo "usage: mj add-cmd <type> <alias> \"<command>\" [--i <param_name>] [--d \"<description>\"]" >&2
+        return 2
+      fi
+      local type="$1"
+      local mj_alias="$2"
+      local cmd="$3"
+      shift 3 || true
+      local input_param=""
+      local desc=""
+      while [ $# -gt 0 ]; do
+        case "$1" in
+          --i)
+            shift; input_param="${1:-}"; [ $# -gt 0 ] && shift ;;
+          --d)
+            shift; desc="${1:-}"; [ $# -gt 0 ] && shift ;;
+          *)
+            shift ;;
+        esac
+      done
+      mkdir -p "$_mj_cmd_dir"
+      local file="$_mj_cmd_dir/${type}.txt"
       local flags_suffix=""
       if [ -n "$input_param" ]; then flags_suffix="  ##i:$input_param"; fi
       if [ -n "$desc" ]; then
-        printf '%s\t%s  # %s%s\n' "$mj_alias" "$prev" "$desc" "$flags_suffix" >> "$file"
-        echo "added [$mj_alias] to ${type}: $prev  # $desc"
+        printf '%s\t%s  # %s%s\n' "$mj_alias" "$cmd" "$desc" "$flags_suffix" >> "$file"
+        echo "added [$mj_alias] to ${type}: $cmd  # $desc"
       else
-        printf '%s\t%s%s\n' "$mj_alias" "$prev" "$flags_suffix" >> "$file"
-        echo "added [$mj_alias] to ${type}: $prev"
+        printf '%s\t%s%s\n' "$mj_alias" "$cmd" "$flags_suffix" >> "$file"
+        echo "added [$mj_alias] to ${type}: $cmd"
       fi
       ;;
     list)
@@ -224,8 +237,9 @@ mj() {
       fi
       ;;
     *)
-      echo "usage: mj {add|list|use|remove|describe}" >&2
-      echo "  mj add <type> <alias> [--i <param_name>] [--d \"<description>\"]" >&2
+      echo "usage: mj {add|add-cmd|list|use|remove|describe}" >&2
+      echo "  mj add <type> <alias>                     # add last command" >&2
+      echo "  mj add-cmd <type> <alias> \"<cmd>\" [--i <param>] [--d \"<desc>\"]" >&2
       echo "  mj list [<type> [--c]]" >&2
       echo "  mj use <type> <alias> [param_name=value|value]" >&2
       echo "  mj remove <type> <alias>" >&2

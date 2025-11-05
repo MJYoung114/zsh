@@ -25,7 +25,8 @@ _mj() {
   local curcontext="$curcontext"
 
   subcommands=(
-    'add:add a command with optional input flag and description'
+    'add:add the last terminal command'
+    'add-cmd:add a command manually with optional input and description'
     'list:list commands (use --c to show commands)'
     'use:execute a stored command'
     'remove:remove a stored command'
@@ -45,8 +46,14 @@ _mj() {
         add)
           _arguments \
             '2:type:->types' \
+            '3:alias:->aliases'
+          ;;
+        add-cmd)
+          _arguments \
+            '2:type:->types' \
             '3:alias:->aliases' \
-            '4:flags:->flags'
+            '4:command:_files' \
+            '5:flags:->flags'
           ;;
         list)
           _arguments \
