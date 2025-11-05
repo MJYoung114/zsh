@@ -1,12 +1,17 @@
+# Oh My Zsh (if installed)
+if [ -d "$HOME/.oh-my-zsh" ]; then
+  export ZSH="$HOME/.oh-my-zsh"
+  ZSH_THEME="robbyrussell"
+  plugins=(git)
+  ZSH_DISABLE_COMPFIX=true
+  source "$ZSH/oh-my-zsh.sh"
+fi
+
 # Setup fzf and fzf-z
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 source ~/.fzf-z/fzf-z.plugin.zsh
 export FZFZ_EXTRA_DIRS="~/Documents"
 export FZFZ_SUBDIR_LIMIT=1
-
-# Fix invisible cursor error when going back: https://github.com/zsh-users/zsh-syntax-highlighting/issues/171
-typeset -A ZSH_HIGHLIGHT_STYLES
-ZSH_HIGHLIGHT_STYLES[cursor]=underline
 
 # Load aliases and shortcuts if existent.
 [ -f "$HOME/.config/shortcutrc" ] && source "$HOME/.config/shortcutrc"
@@ -27,27 +32,21 @@ if command -v fnm >/dev/null 2>&1; then
   eval "$(fnm env --use-on-cd)"
 fi
 
- 
-
- 
-
 # tabtab source for packages
 # uninstall by removing these lines
 [[ -f ~/.config/tabtab/__tabtab.zsh ]] && . ~/.config/tabtab/__tabtab.zsh || true
 
-# Setup completion
-fpath=(~/.zsh/completion $fpath)
-autoload -Uz compinit && compinit -i
+# Setup completion (only if OMZ not present; OMZ runs compinit)
+if [ ! -d "$HOME/.oh-my-zsh" ]; then
+  fpath=(~/.zsh/completion $fpath)
+  autoload -Uz compinit && compinit -i
+fi
 
-# This somehow gets git to have proper autocomplete even though hub is also aliased to git.
-# setopt complete_aliases # this breaks the autocomplete for kubectl it seems...
+
 source <(kubectl completion zsh)
 
-# complete -C '/usr/local/bin/aws_completer' aws
 
 autoload -U +X bashcompinit && bashcompinit
-# complete -o nospace -C /usr/bin/terraform terraform
-
 
 ## useful functions:
 take ()
@@ -66,15 +65,7 @@ take ()
 # uninstall by removing these lines
 [[ -f ~/.config/tabtab/zsh/__tabtab.zsh ]] && . ~/.config/tabtab/zsh/__tabtab.zsh || true
 
- 
-
 complete -o nospace -C /usr/bin/terraform terraform
-
- 
-
-
- 
-
 
 ## Keep bash history neat:
 setopt HIST_IGNORE_ALL_DUPS
