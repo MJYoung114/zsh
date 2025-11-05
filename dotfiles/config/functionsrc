@@ -45,10 +45,9 @@ mj() {
       ;;
     list)
       if [ $# -lt 1 ]; then
-        echo "usage: mj list <type>" >&2
         echo "available types:" >&2
         command ls -1 "$_mj_cmd_dir" 2>/dev/null | sed 's/\.txt$//' >&2 || true
-        return 2
+        return 0
       fi
       local type="$1"
       local file="$_mj_cmd_dir/${type}.txt"
