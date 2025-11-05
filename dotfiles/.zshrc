@@ -16,14 +16,7 @@ export PATH=$GOPATH/bin:$PATH
 
 # eval "$(fnm env --multi)"
 
-# add z.lua (a fast `z`).
-#     NOTES: enhanced - use a silgtly different ranking algorithm than original `z`
-#            once - use number of times you go into a directory rather than amount of time in a directory
-#            fzf - use fzf tab completion
-alias lua=lua5.4 ##incase lua isn't defined on your machine...
-eval "$(lua ~/.z.lua/z.lua --init zsh)"
-# eval "$(lua ~/.z.lua/z.lua --init zsh enhanced fzf)"
-#. ~/.z.script/z.sh
+ 
 
 # Setup fzf and fzf-z
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
@@ -36,8 +29,7 @@ export FZFZ_SUBDIR_LIMIT=1
 bindkey "^A" vi-beginning-of-line
 # See more here: https://github.com/zsh-users/zsh/blob/master/Src/Zle/iwidgets.list
 
-# Alias hub as git: https://github.com/github/hub#aliasing All normal git commands should still work
-eval "$(hub alias -s)"
+ 
 fpath=(~/.zsh/completions $fpath) 
 autoload -U compinit && compinit
 
