@@ -15,43 +15,80 @@ fi
 # MJ commands store (per-type lists under ~/.config/mj-commands)
 _mj_cmd_dir="${XDG_CONFIG_HOME:-$HOME/.config}/mj-commands"
 
-mj-add() {
-  if [ $# -lt 1 ]; then
-    echo "usage: mj-add <type> [\"<description>\"]" >&2
-    return 2
-  fi
-  local type="$1"
-  local desc="$2"
-  mkdir -p "$_mj_cmd_dir"
-  # Capture the previous command (not this mj-add invocation)
-  local prev
-  prev="$(fc -ln -2 | head -n1 | sed 's/^\s*//')"
-  if [ -z "$prev" ]; then
-    echo "no previous command found" >&2
-    return 1
-  fi
-  if [ -n "$desc" ]; then
-    printf '%s  # %s\n' "$prev" "$desc" >> "$_mj_cmd_dir/${type}.txt"
-    echo "added to ${type}: $prev  # $desc"
-  else
-    printf '%s\n' "$prev" >> "$_mj_cmd_dir/${type}.txt"
-    echo "added to ${type}: $prev"
-  fi
-}
+mj() {
+  local cmd="${1:-}"
+  shift || true
 
-mj-list() {
-  if [ $# -lt 1 ]; then
-    echo "usage: mj-list <type>" >&2
-    echo "available types:" >&2
-    command ls -1 "$_mj_cmd_dir" 2>/dev/null | sed 's/\.txt$//' >&2 || true
-    return 2
-  fi
-  local type="$1"
-  local file="$_mj_cmd_dir/${type}.txt"
-  if [ ! -f "$file" ]; then
-    echo "no entries for type: $type" >&2
-    return 1
-  fi
-  nl -ba "$file"
+  case "$cmd" in
+    add)
+      if [ $# -lt 1 ]; then
+        echo "usage: mj add <type> [\"<description>\"]" >&2
+        return 2
+      fi
+      local type="$1"
+      local desc="$2"
+      mkdir -p "$_mj_cmd_dir"
+      # Capture the previous command (not this mj invocation)
+      local prev
+      prev="$(fc -ln -2 | head -n1 | sed 's/^\s*//')"
+      if [ -z "$prev" ]; then
+        echo "no previous command found" >&2
+        return 1
+      fi
+      if [ -n "$desc" ]; then
+        printf '%s  # %s\n' "$prev" "$desc" >> "$_mj_cmd_dir/${type}.txt"
+        echo "added to ${type}: $prev  # $desc"
+      else
+        printf '%s\n' "$prev" >> "$_mj_cmd_dir/${type}.txt"
+        echo "added to ${type}: $prev"
+      fi
+      ;;
+    list)
+      if [ $# -lt 1 ]; then
+        echo "usage: mj list <type>" >&2
+        echo "available types:" >&2
+        command ls -1 "$_mj_cmd_dir" 2>/dev/null | sed 's/\.txt$//' >&2 || true
+        return 2
+      fi
+      local type="$1"
+      local file="$_mj_cmd_dir/${type}.txt"
+      if [ ! -f "$file" ]; then
+        echo "no entries for type: $type" >&2
+        return 1
+      fi
+      nl -ba "$file"
+      ;;
+    remove)
+      if [ $# -lt 2 ]; then
+        echo "usage: mj remove <type> <index>" >&2
+        return 2
+      fi
+      local type="$1"
+      local index="$2"
+      local file="$_mj_cmd_dir/${type}.txt"
+      if [ ! -f "$file" ]; then
+        echo "no entries for type: $type" >&2
+        return 1
+      fi
+      local total
+      total="$(wc -l < "$file" | tr -d ' ')"
+      if [ "$index" -lt 1 ] || [ "$index" -gt "$total" ]; then
+        echo "index out of range (1-$total)" >&2
+        return 1
+      fi
+      # Remove the line at index (sed -i is not portable, use temp file)
+      local tmp
+      tmp="$(mktemp)"
+      sed "${index}d" "$file" > "$tmp" && mv "$tmp" "$file"
+      echo "removed entry $index from ${type}"
+      ;;
+    *)
+      echo "usage: mj {add|list|remove}" >&2
+      echo "  mj add <type> [\"<description>\"]" >&2
+      echo "  mj list <type>" >&2
+      echo "  mj remove <type> <index>" >&2
+      return 2
+      ;;
+  esac
 }
 
