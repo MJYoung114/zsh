@@ -1,33 +1,11 @@
-#
-#
-# Executes commands at the start of an interactive session.
-#
-# Authors:
-#   Sorin Ionescu <sorin.ionescu@gmail.com>
-#
-
-# Source Prezto.
-
-# Customize to your needs...
 export GOPATH=/Users/$USER/go
 export PATH=$GOPATH/bin:$PATH
-# Add snap to path
-# export PATH="/snap/bin:$PATH"
-
-# eval "$(fnm env --multi)"
-
- 
-
 # Setup fzf and fzf-z
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 source ~/.fzf-z/fzf-z.plugin.zsh
 export FZFZ_EXTRA_DIRS="~/Documents"
 export FZFZ_SUBDIR_LIMIT=1
 
-
- 
-
- 
 fpath=(~/.zsh/completions $fpath) 
 autoload -U compinit && compinit
 
@@ -38,6 +16,7 @@ ZSH_HIGHLIGHT_STYLES[cursor]=underline
 # Load aliases and shortcuts if existent.
 [ -f "$HOME/.config/shortcutrc" ] && source "$HOME/.config/shortcutrc"
 [ -f "$HOME/.config/aliasrc" ] && source "$HOME/.config/aliasrc"
+[ -f "$HOME/.config/functionsrc" ] && source "$HOME/.config/functionsrc"
 
 # Ensure Homebrew bin on PATH for non-login shells (so fnm is discoverable)
 if [[ "$OSTYPE" == darwin* ]] && [ -d "/opt/homebrew/bin" ]; then
@@ -87,17 +66,7 @@ take ()
        cd -P -- "$1"
 }
 
-# Show tip when checking Node.js version via node --version or -v
-if command -v node >/dev/null 2>&1; then
-node() {
-    if [ $# -eq 1 ] && { [ "$1" = "--version" ] || [ "$1" = "-v" ]; }; then
-        command node --version
-        echo "use fnm use <version> to change version"
-    else
-        command node "$@"
-    fi
-}
-fi
+ 
 
 # Generated for envman. Do not edit.
 [ -s "$HOME/.config/envman/load.sh" ] && source "$HOME/.config/envman/load.sh"

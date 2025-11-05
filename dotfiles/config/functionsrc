@@ -1,0 +1,14 @@
+# Shell functions
+
+# Show tip when checking Node.js version via node --version or -v
+if command -v node >/dev/null 2>&1; then
+node() {
+    if [ $# -eq 1 ] && { [ "$1" = "--version" ] || [ "$1" = "-v" ]; }; then
+        command node --version
+        echo "use fnm use <version> to change version"
+    else
+        command node "$@"
+    fi
+}
+fi
+

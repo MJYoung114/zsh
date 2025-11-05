@@ -75,6 +75,7 @@ link_to() {
 
 link_to "config/aliasrc" "$HOME/.config/aliasrc"
 link_to "config/shortcutrc" "$HOME/.config/shortcutrc"
+link_to "config/functionsrc" "$HOME/.config/functionsrc"
 
 echo "Backups saved to: $backup_dir"
 echo "Done."
