@@ -98,9 +98,19 @@ bindkey '^e' edit-command-line
 [ -f "$HOME/.config/shortcutrc" ] && source "$HOME/.config/shortcutrc"
 [ -f "$HOME/.config/aliasrc" ] && source "$HOME/.config/aliasrc"
 
-# # fnm (I'm not sure if this is actually needed, it seems to work when I remove this. Anyway, left in to be safe)
-export PATH="/Users/mjyoung/Library/Application Support/fnm"
-eval "`fnm env --multi`"
+# Ensure Homebrew bin on PATH for non-login shells (so fnm is discoverable)
+if [[ "$OSTYPE" == darwin* ]] && [ -d "/opt/homebrew/bin" ]; then
+  export PATH="/opt/homebrew/bin:$PATH"
+fi
+
+# fnm (guarded; prefer fnm over nvm)
+if command -v fnm >/dev/null 2>&1; then
+  # Add user's fnm dir with space-safe path if needed
+  if [ -d "/Users/mjyoung/Library/Application Support/fnm" ]; then
+    export PATH="$PATH:/Users/mjyoung/Library/Application Support/fnm"
+  fi
+  eval "$(fnm env --use-on-cd)"
+fi
 
 # Setup golang
 # export GOROOT=/snap/bin/go # install go via snap
@@ -226,6 +236,4 @@ export SOPS_AGE_KEY_FILE=/Users/mjyoung/Documents/envio.txt
 
 unalias gt # gt is used for graphite
 export PATH="/Users/mjyoung/Library/Application Support/fnm":/opt/homebrew/bin:/home/mjyoung/.fnm:/Users/mjyoung/bin:/Users/mjyoung/go/bin:/bin:/snap/bin:/home/jasoons/.deno/bin:/Users/mjyoung/bin:/Users/mjyoung/go/bin:/bin:/snap/bin:/usr/local/bin:/usr/local/sbin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/Users/mjyoung/.cargo/bin:/home/jasoons/.local/bin:/Users/mjyoung/.fzf/bin:/home/jasoons/.foundry/bin:/home/jasoons/.local/bin:/home/jasoons/.foundry/bin:/home/jasoons/.local/bin
-
-eval "`fnm env`"
 
