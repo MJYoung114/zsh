@@ -41,7 +41,7 @@ fi
 #
 
 # Ensure path arrays do not contain duplicates.
-typeset -gU cdpath fpath mailpath path
+typeset -gU fpath path
 
 # Set the list of directories that cd searches.
 # cdpath=(
@@ -53,6 +53,19 @@ path=(
   /usr/local/{bin,sbin}
   $path
 )
+
+# Go (GOPATH) and user bin on PATH
+export GOPATH="$HOME/go"
+path=(
+  $GOPATH/bin
+  $path
+)
+if [ -d "$HOME/bin" ]; then
+  path=(
+    $HOME/bin
+    $path
+  )
+fi
 
 #
 # Less

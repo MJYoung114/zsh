@@ -1,13 +1,8 @@
-export GOPATH=/Users/$USER/go
-export PATH=$GOPATH/bin:$PATH
 # Setup fzf and fzf-z
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 source ~/.fzf-z/fzf-z.plugin.zsh
 export FZFZ_EXTRA_DIRS="~/Documents"
 export FZFZ_SUBDIR_LIMIT=1
-
-fpath=(~/.zsh/completions $fpath) 
-autoload -U compinit && compinit
 
 # Fix invisible cursor error when going back: https://github.com/zsh-users/zsh-syntax-highlighting/issues/171
 typeset -A ZSH_HIGHLIGHT_STYLES
@@ -32,12 +27,7 @@ if command -v fnm >/dev/null 2>&1; then
   eval "$(fnm env --use-on-cd)"
 fi
 
-# Setup golang
-# export GOROOT=/snap/bin/go # install go via snap
-export GOPATH=$HOME/go
-export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
-
-export PATH=~/bin:$PATH
+ 
 
  
 
