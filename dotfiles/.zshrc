@@ -25,9 +25,7 @@ export FZFZ_EXTRA_DIRS="~/Documents"
 export FZFZ_SUBDIR_LIMIT=1
 
 
-# allow `ctrl+a` to move you to the beginning of the line even in vi mode.
-bindkey "^A" vi-beginning-of-line
-# See more here: https://github.com/zsh-users/zsh/blob/master/Src/Zle/iwidgets.list
+ 
 
  
 fpath=(~/.zsh/completions $fpath) 
@@ -37,62 +35,16 @@ autoload -U compinit && compinit
 typeset -A ZSH_HIGHLIGHT_STYLES
 ZSH_HIGHLIGHT_STYLES[cursor]=underline
 
-## from: https://gist.github.com/LukeSmithxyz/e62f26e55ea8b0ed41a65912fbebbe52
-# Change cursor shape for different vi modes.
-function zle-keymap-select {
-  if [[ ${KEYMAP} == vicmd ]] ||
-     [[ $1 = 'block' ]]; then
-    echo -ne '\e[1 q'
-  elif [[ ${KEYMAP} == main ]] ||
-       [[ ${KEYMAP} == viins ]] ||
-       [[ ${KEYMAP} = '' ]] ||
-       [[ $1 = 'beam' ]]; then
-    echo -ne '\e[5 q'
-  fi
-}
-zle -N zle-keymap-select
-zle-line-init() {
-    zle -K viins # initiate `vi insert` as keymap (can be removed if `bindkey -V` has been set elsewhere)
-    echo -ne "\e[5 q"
-}
-zle -N zle-line-init
-echo -ne '\e[5 q' # Use beam shape cursor on startup.
-preexec() { echo -ne '\e[5 q' ;} # Use beam shape cursor for each new prompt.
+ 
 
 
-lfcd () {
-    tmp="$(mktemp)"
-    lf -last-dir-path="$tmp" "$@"
-    if [ -f "$tmp" ]; then
-        dir="$(cat "$tmp")"
-        rm -f "$tmp"
-        [ -d "$dir" ] && [ "$dir" != "$(pwd)" ] && cd "$dir"
-    fi
-}
+ 
 
-bindkey -s '^o' 'lfcd\n'
+ 
 
-# ci" (more vim fixes)
-autoload -U select-quoted
-zle -N select-quoted
-for m in visual viopp; do
-  for c in {a,i}{\',\",\`}; do
-    bindkey -M $m $c select-quoted
-  done
-done
+ 
 
-# ci{, ci(, di{ etc.. (some vim fixes)
-autoload -U select-bracketed
-zle -N select-bracketed
-for m in visual viopp; do
-  for c in {a,i}${(s..)^:-'()[]{}<>bB'}; do  #'
-    bindkey -M $m $c select-bracketed
-  done
-done
-
-# Edit line in vim with ctrl-e:
-autoload edit-command-line; zle -N edit-command-line
-bindkey '^e' edit-command-line
+ 
 
 # Load aliases and shortcuts if existent.
 [ -f "$HOME/.config/shortcutrc" ] && source "$HOME/.config/shortcutrc"
@@ -168,8 +120,6 @@ complete -o nospace -C /usr/bin/terraform terraform
 
  
 
-# Add thefuck command
-# eval "$(thefuck --alias fu)"
 
 # Use fzf to view files with a preview
 alias f='fzf --preview "bat --color "always" {}"'
@@ -189,28 +139,6 @@ setopt HIST_IGNORE_ALL_DUPS
 
 setopt EXTENDED_HISTORY
 
-# function shorten_cluster() {
-#     local cluster=$1
-#     # To shorten the cluster name, you can use the following line:
-#     cluster=${cluster: -10}
-
-#     # To set an alias, you can use an associative array like the following:
-#     declare -A cluster_alias_map
-#     cluster_alias_map["very-long-cluster-name"]="alias1"
-#     cluster_alias_map["another-long-cluster-name"]="alias2"
-
-#     if [[ ${cluster_alias_map[$cluster]+_} ]]; then
-#         echo "${cluster_alias_map[$cluster]}"
-#     else
-#         echo "$cluster"
-#     fi
-# }
-
-# export KUBE_PS1_CLUSTER_FUNCTION=shorten_cluster
-
-# # Setup ps1 (kubernetes prompt) [unfortunately this is very long for AWS clusters]
-# source /home/jasoons/Documents/config/kube-ps1/kube-ps1.sh
-# PROMPT='$(kube_ps1)'$PROMPT # or RPROMPT='$(kube_ps1)'
 export AWS_PROFILE=envio
 export SOPS_AGE_KEY_FILE=/Users/mjyoung/Documents/envio.txt
 
