@@ -17,10 +17,11 @@ _mj_cmd_dir="${XDG_CONFIG_HOME:-$HOME/.config}/mj-commands"
 
 mj-add() {
   if [ $# -lt 1 ]; then
-    echo "usage: mj-add <type>" >&2
+    echo "usage: mj-add <type> [\"<description>\"]" >&2
     return 2
   fi
   local type="$1"
+  local desc="$2"
   mkdir -p "$_mj_cmd_dir"
   # Capture the previous command (not this mj-add invocation)
   local prev
@@ -29,8 +30,13 @@ mj-add() {
     echo "no previous command found" >&2
     return 1
   fi
-  printf '%s\n' "$prev" >> "$_mj_cmd_dir/${type}.txt"
-  echo "added to ${type}: $prev"
+  if [ -n "$desc" ]; then
+    printf '%s  # %s\n' "$prev" "$desc" >> "$_mj_cmd_dir/${type}.txt"
+    echo "added to ${type}: $prev  # $desc"
+  else
+    printf '%s\n' "$prev" >> "$_mj_cmd_dir/${type}.txt"
+    echo "added to ${type}: $prev"
+  fi
 }
 
 mj-list() {
