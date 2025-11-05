@@ -169,24 +169,7 @@ alias python="python3"
 
 complete -o nospace -C /usr/bin/terraform terraform
 
-#compdef gt
-###-begin-gt-completions-###
-#
-# yargs command completion script
-#
-# Installation: /run/user/1000/fnm_multishells/75917_1689530499555/bin/gt completion >> ~/.zshrc
-#    or /run/user/1000/fnm_multishells/75917_1689530499555/bin/gt completion >> ~/.zprofile on OSX.
-#
-_gt_yargs_completions()
-{
-  local reply
-  local si=$IFS
-  IFS=$'\n' reply=($(COMP_CWORD="$((CURRENT-1))" COMP_LINE="$BUFFER" COMP_POINT="$CURSOR" /run/user/1000/fnm_multishells/75917_1689530499555/bin/gt --get-yargs-completions "${words[@]}"))
-  IFS=$si
-  _describe 'values' reply
-}
-compdef _gt_yargs_completions gt
-###-end-gt-completions-###
+ 
 
 # Add thefuck command
 # eval "$(thefuck --alias fu)"
@@ -234,6 +217,6 @@ setopt EXTENDED_HISTORY
 export AWS_PROFILE=envio
 export SOPS_AGE_KEY_FILE=/Users/mjyoung/Documents/envio.txt
 
-unalias gt # gt is used for graphite
+ 
 export PATH="/Users/mjyoung/Library/Application Support/fnm":/opt/homebrew/bin:/home/mjyoung/.fnm:/Users/mjyoung/bin:/Users/mjyoung/go/bin:/bin:/snap/bin:/home/jasoons/.deno/bin:/Users/mjyoung/bin:/Users/mjyoung/go/bin:/bin:/snap/bin:/usr/local/bin:/usr/local/sbin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/Users/mjyoung/.cargo/bin:/home/jasoons/.local/bin:/Users/mjyoung/.fzf/bin:/home/jasoons/.foundry/bin:/home/jasoons/.local/bin:/home/jasoons/.foundry/bin:/home/jasoons/.local/bin
 
