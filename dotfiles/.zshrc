@@ -162,8 +162,7 @@ take ()
 
 alias python="python3"
 
-# Flux for kubernetes
-. <(flux completion zsh)
+ 
 
 complete -o nospace -C /usr/bin/terraform terraform
 
