@@ -35,17 +35,6 @@ autoload -U compinit && compinit
 typeset -A ZSH_HIGHLIGHT_STYLES
 ZSH_HIGHLIGHT_STYLES[cursor]=underline
 
- 
-
-
- 
-
- 
-
- 
-
- 
-
 # Load aliases and shortcuts if existent.
 [ -f "$HOME/.config/shortcutrc" ] && source "$HOME/.config/shortcutrc"
 [ -f "$HOME/.config/aliasrc" ] && source "$HOME/.config/aliasrc"
@@ -85,16 +74,11 @@ autoload -Uz compinit && compinit -i
 # This somehow gets git to have proper autocomplete even though hub is also aliased to git.
 # setopt complete_aliases # this breaks the autocomplete for kubectl it seems...
 source <(kubectl completion zsh)
-alias k=kubectl
-alias kns=kubens
-alias kctx=kubectx
 
 # complete -C '/usr/local/bin/aws_completer' aws
 
 autoload -U +X bashcompinit && bashcompinit
 # complete -o nospace -C /usr/bin/terraform terraform
-
-alias oni2="~/bin/Onivim.AppImage --force-device-scale-factor 2"
 
 
 ## useful functions:
@@ -112,8 +96,6 @@ take ()
 # uninstall by removing these lines
 [[ -f ~/.config/tabtab/zsh/__tabtab.zsh ]] && . ~/.config/tabtab/zsh/__tabtab.zsh || true
 
-alias python="python3"
-
  
 
 complete -o nospace -C /usr/bin/terraform terraform
@@ -121,17 +103,7 @@ complete -o nospace -C /usr/bin/terraform terraform
  
 
 
-# Use fzf to view files with a preview
-alias f='fzf --preview "bat --color "always" {}"'
-
-# # ls, but a bit nicer
-# alias ls='exa'
-# alias ll='exa -l'
-
-# Better highlighting etc than cat.
-#alias cat='bat' # leaving this here as a reminder - rather just type bat.
-# man kindof sucks.
-alias man='tldr'
+ 
 
 
 ## Keep bash history neat:

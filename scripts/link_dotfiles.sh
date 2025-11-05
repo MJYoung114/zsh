@@ -42,6 +42,40 @@ link_one ".zshrc"
 link_one ".zprofile"
 link_one ".vimrc"
 
+# Link config files under ~/.config
+mkdir -p "$HOME/.config"
+
+link_to() {
+  local src_rel="$1"      # e.g., config/aliasrc
+  local dst_abs="$2"      # e.g., $HOME/.config/aliasrc
+  local src="$dotfiles_dir/$src_rel"
+
+  if [ ! -e "$src" ]; then
+    echo "[SKIP] Missing source: $src" >&2
+    return 0
+  fi
+
+  if [ -L "$dst_abs" ]; then
+    local target
+    target="$(readlink "$dst_abs")"
+    if [ "$target" = "$src" ]; then
+      echo "[OK] Symlink already set: $dst_abs -> $src"
+      return 0
+    fi
+    echo "[MOVE] Existing symlink to backup: $dst_abs"
+    mv "$dst_abs" "$backup_dir/$(basename "$dst_abs").symlink"
+  elif [ -e "$dst_abs" ]; then
+    echo "[MOVE] Backing up existing file: $dst_abs"
+    mv "$dst_abs" "$backup_dir/$(basename "$dst_abs")"
+  fi
+
+  echo "[LINK] $dst_abs -> $src"
+  ln -s "$src" "$dst_abs"
+}
+
+link_to "config/aliasrc" "$HOME/.config/aliasrc"
+link_to "config/shortcutrc" "$HOME/.config/shortcutrc"
+
 echo "Backups saved to: $backup_dir"
 echo "Done."
 
