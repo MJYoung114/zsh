@@ -161,16 +161,78 @@ mj() {
       local mj_alias=""
       local input_value=""
       if [ $# -lt 1 ]; then
-        echo "usage: mj use [<type>] <alias> [param_name=value|value]" >&2
-        return 2
-      elif [ $# -eq 1 ]; then
-        # Use context if available
+        # No args: interactive selection if context is set
         type="$(_mj_get_context)"
         if [ -z "$type" ]; then
-          echo "usage: mj use <type> <alias> [param_name=value|value] (or set context with 'mj ctx <type>')" >&2
+          echo "usage: mj use [<type>] <alias> [param_name=value|value]" >&2
           return 2
         fi
-        mj_alias="$1"
+        # Interactive alias selection
+        local file="$_mj_cmd_dir/${type}.txt"
+        if [ ! -f "$file" ]; then
+          echo "no entries for type: $type" >&2
+          return 1
+        fi
+        if command -v fzf >/dev/null 2>&1; then
+          # Format: alias  # description for display
+          local aliases_with_desc
+          aliases_with_desc=$(while IFS= read -r line; do
+            local alias_part="${line%%$'\t'*}"
+            local rest="${line#*$'\t'}"
+            if [[ "$rest" = *"  # "* ]]; then
+              local desc_part="${rest#*  # }"
+              desc_part="${desc_part%%  ##i:*}"
+              printf '%s  # %s\n' "$alias_part" "$desc_part"
+            else
+              printf '%s\n' "$alias_part"
+            fi
+          done < "$file")
+          mj_alias=$(echo "$aliases_with_desc" | fzf --prompt="Select alias in $type: " --height=40% --reverse --with-nth=1 | awk '{print $1}')
+          if [ -z "$mj_alias" ]; then
+            return 1
+          fi
+        else
+          echo "usage: mj use <alias> (fzf not available for interactive selection)" >&2
+          return 2
+        fi
+      elif [ $# -eq 1 ]; then
+        # One arg: could be type or alias
+        # Check if it's a type (has entries) or use as alias with context
+        local test_file="$_mj_cmd_dir/$1.txt"
+        if [ -f "$test_file" ]; then
+          # It's a type, show interactive selection
+          type="$1"
+          local file="$_mj_cmd_dir/${type}.txt"
+          if command -v fzf >/dev/null 2>&1; then
+            local aliases_with_desc
+            aliases_with_desc=$(while IFS= read -r line; do
+              local alias_part="${line%%$'\t'*}"
+              local rest="${line#*$'\t'}"
+              if [[ "$rest" = *"  # "* ]]; then
+                local desc_part="${rest#*  # }"
+                desc_part="${desc_part%%  ##i:*}"
+                printf '%s  # %s\n' "$alias_part" "$desc_part"
+              else
+                printf '%s\n' "$alias_part"
+              fi
+            done < "$file")
+            mj_alias=$(echo "$aliases_with_desc" | fzf --prompt="Select alias in $type: " --height=40% --reverse --with-nth=1 | awk '{print $1}')
+            if [ -z "$mj_alias" ]; then
+              return 1
+            fi
+          else
+            echo "usage: mj use <type> <alias> (fzf not available for interactive selection)" >&2
+            return 2
+          fi
+        else
+          # Use as alias with context
+          type="$(_mj_get_context)"
+          if [ -z "$type" ]; then
+            echo "usage: mj use <type> <alias> [param_name=value|value] (or set context with 'mj ctx <type>')" >&2
+            return 2
+          fi
+          mj_alias="$1"
+        fi
       else
         type="$1"
         mj_alias="$2"
@@ -289,13 +351,37 @@ mj() {
       ;;
     ctx)
       if [ $# -lt 1 ]; then
-        # Show current context
-        local ctx
-        ctx="$(_mj_get_context)"
-        if [ -n "$ctx" ]; then
-          echo "current context: $ctx"
+        # Interactive selection with fzf if available
+        if command -v fzf >/dev/null 2>&1; then
+          local types
+          types=($(command ls -1 "$_mj_cmd_dir" 2>/dev/null | sed 's/\.txt$//' | grep -v '^\.' 2>/dev/null || true))
+          if [ ${#types[@]} -eq 0 ]; then
+            echo "no types available" >&2
+            return 1
+          fi
+          # Add "clear" option
+          types+=(clear)
+          local selected
+          selected=$(printf '%s\n' "${types[@]}" | fzf --prompt="Select context: " --height=40% --reverse)
+          if [ -z "$selected" ]; then
+            return 1
+          fi
+          if [ "$selected" = "clear" ]; then
+            rm -f "$_mj_ctx_file"
+            echo "context cleared"
+          else
+            _mj_set_context "$selected"
+            echo "context set to: $selected"
+          fi
         else
-          echo "no context set"
+          # Fallback: show current context
+          local ctx
+          ctx="$(_mj_get_context)"
+          if [ -n "$ctx" ]; then
+            echo "current context: $ctx"
+          else
+            echo "no context set"
+          fi
         fi
         return 0
       fi
