@@ -144,8 +144,6 @@ autoload -U +X bashcompinit && bashcompinit
 
 alias oni2="~/bin/Onivim.AppImage --force-device-scale-factor 2"
 
-. ~/.private_scripts.sh
-
 
 ## useful functions:
 take ()
