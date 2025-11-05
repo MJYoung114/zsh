@@ -87,6 +87,18 @@ take ()
        cd -P -- "$1"
 }
 
+# Show tip when checking Node.js version via node --version or -v
+if command -v node >/dev/null 2>&1; then
+node() {
+    if [ $# -eq 1 ] && { [ "$1" = "--version" ] || [ "$1" = "-v" ]; }; then
+        command node --version
+        echo "use fnm use <version> to change version"
+    else
+        command node "$@"
+    fi
+}
+fi
+
 # Generated for envman. Do not edit.
 [ -s "$HOME/.config/envman/load.sh" ] && source "$HOME/.config/envman/load.sh"
 
