@@ -4,7 +4,7 @@ fpath=(~/.zsh/completion "$HOME/.config" $fpath)
 # Oh My Zsh (if installed)
 if [ -d "$HOME/.oh-my-zsh" ]; then
   export ZSH="$HOME/.oh-my-zsh"
-ZSH_THEME="trapd00r" # set by `omz`
+ZSH_THEME="eastwood" # set by `omz`
   plugins=(git zsh-autosuggestions zsh-syntax-highlighting you-should-use zsh-bat)
   ZSH_DISABLE_COMPFIX=true
   source "$ZSH/oh-my-zsh.sh"
