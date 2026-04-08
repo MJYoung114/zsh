@@ -1,2 +1,4 @@
-change	fnm use  # put a version at the end  ##i
 20	fnm use 20 
+change	fnm use <version>  # change version, version=  ##i:version
+version	node --version && echo "mj use node change version=x"
+default	fnm default  <v>  # set global default  ##i:v

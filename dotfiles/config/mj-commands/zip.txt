@@ -1,0 +1,1 @@
+unzip	tar -xvzf <zip>  # unzip folder, zip=x  ##i:zip

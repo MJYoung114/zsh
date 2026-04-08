@@ -1,0 +1,1 @@
+upstream	git branch --set-upstream-to=origin/<branch> <branch>  # set upstream  ##i:branch

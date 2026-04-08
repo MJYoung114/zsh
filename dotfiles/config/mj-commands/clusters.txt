@@ -1,0 +1,5 @@
+hyper	export KUBECONFIG=/Users/mjyoung/zsh/k8sconfig/hosted-hypertier-ip-eu.yaml
+hyperrke2	export KUBECONFIG=/Users/mjyoung/zsh/k8sconfig/rke2-hyper.yaml
+hyperchicago	export KUBECONFIG=/Users/mjyoung/zsh/k8sconfig/hosted-hypertier-ch-us.yaml
+iphypersync	export KUBECONFIG=/Users/mjyoung/zsh/k8sconfig/hypersync-ip-projects.yaml
+cherryhypersync	export KUBECONFIG=/Users/mjyoung/zsh/k8sconfig/hypersync-cherry.yaml

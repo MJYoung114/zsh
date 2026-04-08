@@ -4,8 +4,8 @@ fpath=(~/.zsh/completion "$HOME/.config" $fpath)
 # Oh My Zsh (if installed)
 if [ -d "$HOME/.oh-my-zsh" ]; then
   export ZSH="$HOME/.oh-my-zsh"
-  ZSH_THEME="robbyrussell"
-  plugins=(git)
+ZSH_THEME="trapd00r" # set by `omz`
+  plugins=(git zsh-autosuggestions zsh-syntax-highlighting you-should-use zsh-bat)
   ZSH_DISABLE_COMPFIX=true
   source "$ZSH/oh-my-zsh.sh"
 fi
@@ -76,5 +76,6 @@ setopt EXTENDED_HISTORY
 
 export AWS_PROFILE=envio
 export SOPS_AGE_KEY_FILE=/Users/mjyoung/Documents/envio.txt
+export COREPACK_ENABLE_AUTO_PIN=0
 
  

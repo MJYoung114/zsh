@@ -1,0 +1,1 @@
+dev	export KUBECONFIG=/Users/mjyoung/zsh/k8sconfig/hosted-dev.yaml

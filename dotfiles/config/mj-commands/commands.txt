@@ -1,0 +1,2 @@
+check-port	lsof -i :<port>  # check whats running on a port port=x  ##i:port
+kill-pid	kill -9 <pid>  # kill a running pid, use check-port for pid pid=x  ##i:pid
