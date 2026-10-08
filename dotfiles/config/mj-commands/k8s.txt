@@ -1,5 +1,5 @@
 pods	k get pods  # get pods commands generic
 killdev	k cnpg destroy  envio-dev-tier <instance> -n postgres  # kill dev tier instance, instance=  ##i:instance
-sopse	sops -e -i secrets.yaml
-sopsd	sops -d -i secrets.yaml
+sopse	sops -e -i secrets.yaml  # sops encrypt secrets.yaml in place
+sopsd	sops -d -i secrets.yaml  # sops decrypt secrets.yaml in place
 cnpgkill	k cnpg destroy  <cluster>  <instance> -n postgres  # kill <cluster> instance, instance=  ##i:cluster

@@ -1,5 +1,10 @@
-hyper	export KUBECONFIG=/Users/mjyoung/zsh/k8sconfig/hosted-hypertier-ip-eu.yaml
-hyperrke2	export KUBECONFIG=/Users/mjyoung/zsh/k8sconfig/rke2-hyper.yaml
-hyperchicago	export KUBECONFIG=/Users/mjyoung/zsh/k8sconfig/hosted-hypertier-ch-us.yaml
-iphypersync	export KUBECONFIG=/Users/mjyoung/zsh/k8sconfig/hypersync-ip-projects.yaml
-cherryhypersync	export KUBECONFIG=/Users/mjyoung/zsh/k8sconfig/hypersync-cherry.yaml
+hyper	export KUBECONFIG=$HOME/zsh/k8sconfig/hosted-hypertier-ip-eu.yaml  # set KUBECONFIG for hyper
+hyperrke2	export KUBECONFIG=$HOME/zsh/k8sconfig/rke2-hyper.yaml  # set KUBECONFIG for hyperrke2
+hyperchicago	export KUBECONFIG=$HOME/zsh/k8sconfig/hosted-hypertier-ch-us.yaml  # set KUBECONFIG for hyperchicago
+internal-eu	export KUBECONFIG=$HOME/zsh/k8sconfig/cloud-internal-eu.yaml  # set KUBECONFIG for internal-eu
+internal-eu-direct	export KUBECONFIG=$HOME/zsh/k8sconfig/cloud-internal-eu-direct.yaml  # set KUBECONFIG for internal-eu-direct
+internal-us	export KUBECONFIG=$HOME/zsh/k8sconfig/cloud-internal-us.yaml  # set KUBECONFIG for internal-us
+dev	export KUBECONFIG=$HOME/zsh/k8sconfig/hosted-dev.yaml  # set KUBECONFIG for dev
+ip1	export KUBECONFIG=$HOME/zsh/k8sconfig/hypersync-ip-projects.yaml  # set KUBECONFIG for ip1
+cherry1	export KUBECONFIG=$HOME/zsh/k8sconfig/hypersync-cherry.yaml  # set KUBECONFIG for cherry1
+staging	export KUBECONFIG=$HOME/zsh/k8sconfig/hypersync-staging.yaml  # set KUBECONFIG for staging

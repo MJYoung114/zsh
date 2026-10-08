@@ -1,1 +1,1 @@
-down-v	docker compose down -v
+down-v	docker compose down -v  # compose down and remove volumes

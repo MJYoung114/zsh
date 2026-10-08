@@ -1,3 +1,3 @@
-update	helm dependency update
+update	helm dependency update  # update helm chart dependencies
 template	helm template . --debug --values values.yaml --values values/<cluster>/secrets.yaml --values values/<cluster>/values.yaml  # template with secret, cluster=  ##i:cluster
 template-ns	helm template . --debug --values values.yaml --values values/<cluster>/values.yaml  # template no secret, cluster=  ##i:cluster

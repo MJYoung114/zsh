@@ -1,0 +1,7 @@
+wiki	cc wiki  # claude in team wiki + envio-wiki-v2
+v2	cc v2  # claude in envio-wiki-v2 + team wiki
+resume	cc wiki -r  # resume a wiki claude session
+pull	git -C "$HOME/Public/envio/wiki" pull --ff-only  # update team wiki before syncing
+gap	cc wiki -P gap  # read-only diff of v2 vs wiki, lists missing pages
+port	cc wiki -P port -A <path>  # port one v2 page into wiki format, path=x  ##i:path
+refresh	cc v2 -P refresh  # re-verify v2 README, CLAUDE.md and Source headers

@@ -1,2 +1,4 @@
+login	aws sso login --profile=envio  # aws sso login
+printlogin	aws sts get-caller-identity  # show current aws identity
 aws-west	aws ecr get-login-password --region "eu-west-1" | docker login --username AWS --password-stdin "383266146290.dkr.ecr.eu-west-1.amazonaws.com"  # login to aws ecr for eu-west-1
 aws-central	aws ecr get-login-password --region "eu-central-1" | docker login --username AWS --password-stdin "383266146290.dkr.ecr.eu-central-1.amazonaws.com"  # ecr login for eu-central-1

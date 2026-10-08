@@ -1,0 +1,1 @@
+open	open -a Obsidian "$HOME/Public/envio/wiki"  # open team wiki in Obsidian

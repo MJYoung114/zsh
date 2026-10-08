@@ -29,10 +29,198 @@ _mj_set_context() {
   echo "$type" > "$_mj_ctx_file" 2>/dev/null
 }
 
+_mj_tui_help() {
+  cat <<'EOF'
+  ctx,  c     - switch context
+  list, ls, l - list commands
+  run,  r     - pick & execute a command
+  add,  a     - save last command as alias
+  rm          - remove a command
+  desc, d     - describe a command
+  help, ?, h  - show this help
+  quit, q     - exit (also Ctrl-D)
+EOF
+}
+
+_mj_tui_loop() {
+  local _mj_tui_exit=0
+  trap '_mj_tui_exit=1' INT
+
+  _mj_tui_help
+
+  while true; do
+    # Check if Ctrl-C was pressed at the prompt
+    if [ "$_mj_tui_exit" -eq 1 ]; then
+      echo ""
+      echo "bye"
+      break
+    fi
+
+    local ctx
+    ctx="$(_mj_get_context)"
+    local prompt
+    if [ -n "$ctx" ]; then
+      prompt="mj> [$ctx] "
+    else
+      prompt="mj> "
+    fi
+
+    local input
+    if ! read -r "input?${prompt}"; then
+      # Ctrl-D
+      echo ""
+      echo "bye"
+      break
+    fi
+
+    # Reset Ctrl-C flag after read succeeds
+    _mj_tui_exit=0
+
+    # Skip empty input
+    [ -z "$input" ] && continue
+
+    # Parse command and args
+    local loop_cmd loop_args
+    loop_cmd="${input%% *}"
+    if [ "$loop_cmd" = "$input" ]; then
+      loop_args=""
+    else
+      loop_args="${input#* }"
+    fi
+
+    case "$loop_cmd" in
+      ctx|c)
+        if [ -n "$loop_args" ]; then
+          mj ctx $loop_args
+        else
+          mj ctx
+        fi
+        ;;
+      list|ls|l)
+        if [ -n "$loop_args" ]; then
+          mj list $loop_args
+        else
+          ctx="$(_mj_get_context)"
+          if [ -n "$ctx" ]; then
+            mj list "$ctx"
+          else
+            mj list
+          fi
+        fi
+        ;;
+      run|r|use)
+        if [ -n "$loop_args" ]; then
+          mj use $loop_args
+        else
+          mj use
+        fi
+        ;;
+      add|a)
+        if [ -n "$loop_args" ]; then
+          mj add $loop_args
+        else
+          mj add
+        fi
+        ;;
+      rm|remove)
+        ctx="$(_mj_get_context)"
+        if [ -n "$loop_args" ]; then
+          # If only alias given and context is set, prepend context
+          local rm_words=($=loop_args)
+          if [ ${#rm_words[@]} -eq 1 ] && [ -n "$ctx" ]; then
+            mj remove "$ctx" "$loop_args"
+          else
+            mj remove $loop_args
+          fi
+        else
+          echo "usage: rm <alias>" >&2
+        fi
+        ;;
+      desc|d|describe)
+        ctx="$(_mj_get_context)"
+        if [ -n "$loop_args" ]; then
+          local desc_words=($=loop_args)
+          if [ ${#desc_words[@]} -eq 1 ] && [ -n "$ctx" ]; then
+            mj describe "$ctx" "$loop_args"
+          else
+            mj describe $loop_args
+          fi
+        else
+          echo "usage: desc <alias>" >&2
+        fi
+        ;;
+      help|\?|h)
+        _mj_tui_help
+        ;;
+      quit|q|exit)
+        echo "bye"
+        break
+        ;;
+      *)
+        # Treat as alias shorthand in current context
+        ctx="$(_mj_get_context)"
+        if [ -n "$ctx" ]; then
+          mj use "$ctx" $input
+        else
+          echo "unknown command: $loop_cmd (set a context first or type 'help')" >&2
+        fi
+        ;;
+    esac
+  done
+
+  trap - INT
+}
+
 mj() {
   local cmd="${1:-}"
   shift || true
-  
+
+  if [ "$cmd" = "--help" ] || [ "$cmd" = "-h" ] || [ "$cmd" = "help" ]; then
+    cat <<'HELP'
+mj - personal command manager
+
+COMMANDS
+  mj ctx [<type>|clear]
+      Set, show, or clear the active context (type).
+      Without arguments, opens fzf to pick a type interactively.
+      Current context is used as default type for other commands.
+
+  mj add [<type>] <alias>
+      Save the last terminal command under <alias>.
+      Uses current context if <type> is omitted.
+
+  mj add-cmd <type> <alias> "<command>" [--i <param>] [--d "<description>"]
+      Manually add a command. Use --i to define an input placeholder
+      (<param> in the command string) and --d to attach a description.
+
+  mj use [<type>] [<alias>] [param=value|value]
+      Execute a stored command. Without <alias>, opens fzf to pick one.
+      If the command has an input parameter, pass a value as the third arg.
+
+  mj <alias> [args...]
+      Shorthand for 'mj use' using the current context.
+
+  mj list [<type> [--c]]
+      Without <type>, lists all available types.
+      With <type>, lists aliases (and descriptions). Add --c to show full commands.
+
+  mj describe <type> <alias>
+      Show the alias, command, and description for a stored entry.
+
+  mj remove <type> <alias>
+      Remove a stored command.
+
+EXAMPLES
+  mj ctx k8s                          # set context to k8s
+  mj add rollout                      # save last command as 'rollout' in k8s
+  mj rollout                          # run it (context shorthand)
+  mj add-cmd docker prune "docker system prune -af" --d "clean up docker"
+  mj use docker prune                 # run the docker prune command
+  mj list docker --c                  # show docker commands with full command text
+HELP
+    return 0
+  fi
+
   # If not a valid subcommand and context is set, treat as alias in context
   if [ -n "$cmd" ] && [ "$cmd" != "use" ] && [ "$cmd" != "add" ] && [ "$cmd" != "add-cmd" ] && [ "$cmd" != "list" ] && [ "$cmd" != "remove" ] && [ "$cmd" != "describe" ] && [ "$cmd" != "ctx" ]; then
     # Check if it's an alias in current context
@@ -74,14 +262,11 @@ mj() {
         echo "no previous command found" >&2
         return 1
       fi
-      # Disallow storing mj commands
-      case "$prev" in
-        mj\ *)
-          echo "refusing to add an mj command" >&2
-          return 1
-          ;;
-      esac
       local file="$_mj_cmd_dir/${type}.txt"
+      if [ -f "$file" ] && awk -F'\t' -v a="$mj_alias" '$1==a{f=1} END{exit !f}' "$file"; then
+        echo "alias already exists in ${type}: $mj_alias (remove it first)" >&2
+        return 1
+      fi
       printf '%s\t%s\n' "$mj_alias" "$prev" >> "$file"
       echo "added [$mj_alias] to ${type}: $prev"
       ;;
@@ -148,6 +333,7 @@ mj() {
           if [[ "$rest" = *"  # "* ]]; then
             local cmd_part="${rest%%  # *}"
             local desc_part="${rest#*  # }"
+            desc_part="${desc_part%%  ##i:*}"
             printf "%6d  %s  # %s\n" "$line_num" "$alias_part" "$desc_part"
           else
             printf "%6d  %s\n" "$line_num" "$alias_part"
@@ -187,7 +373,7 @@ mj() {
               printf '%s\n' "$alias_part"
             fi
           done < "$file")
-          mj_alias=$(echo "$aliases_with_desc" | fzf --prompt="Select alias in $type: " --height=40% --reverse --with-nth=1 | awk '{print $1}')
+          mj_alias=$(echo "$aliases_with_desc" | fzf --prompt="Select alias in $type: " --height=40% --reverse | awk '{print $1}')
           if [ -z "$mj_alias" ]; then
             return 1
           fi
@@ -216,7 +402,7 @@ mj() {
                 printf '%s\n' "$alias_part"
               fi
             done < "$file")
-            mj_alias=$(echo "$aliases_with_desc" | fzf --prompt="Select alias in $type: " --height=40% --reverse --with-nth=1 | awk '{print $1}')
+            mj_alias=$(echo "$aliases_with_desc" | fzf --prompt="Select alias in $type: " --height=40% --reverse | awk '{print $1}')
             if [ -z "$mj_alias" ]; then
               return 1
             fi
@@ -245,13 +431,12 @@ mj() {
       fi
       # Find line starting with alias<TAB>
       local line
-      line="$(grep -E "^$(printf '%s' "$mj_alias" | sed 's/[].[^$*\\|?+(){}]/\\&/g')\t" "$file" | head -n1)"
+      line="$(awk -F'\t' -v a="$mj_alias" '$1==a{print; exit}' "$file")"
       if [ -z "$line" ]; then
         echo "alias not found: $mj_alias" >&2
         return 1
       fi
       # Strip leading "alias<TAB>", then drop trailing  "  # desc" if present
-      local cmd
       cmd="${line#*$'\t'}"
       # Detect and extract input parameter name from flags token
       local input_param=""
@@ -307,13 +492,13 @@ mj() {
       local tmp
       tmp="$(mktemp)"
       # Keep lines that do NOT start with "alias<TAB>"
-      grep -v -E "^$(printf '%s' "$mj_alias" | sed 's/[].[^$*\\|?+(){}]/\\&/g')\t" "$file" > "$tmp" || true
+      awk -F'\t' -v a="$mj_alias" '$1!=a' "$file" > "$tmp" || true
       if cmp -s "$file" "$tmp"; then
         rm -f "$tmp"
         echo "no entry found for alias: $mj_alias" >&2
         return 1
       fi
-      mv "$tmp" "$file"
+      cat "$tmp" > "$file" && rm -f "$tmp"
       echo "removed alias [$mj_alias] from ${type}"
       ;;
     describe)
@@ -330,7 +515,7 @@ mj() {
       fi
       # Find line starting with alias<TAB>
       local line
-      line="$(grep -E "^$(printf '%s' "$mj_alias" | sed 's/[].[^$*\\|?+(){}]/\\&/g')\t" "$file" | head -n1)"
+      line="$(awk -F'\t' -v a="$mj_alias" '$1==a{print; exit}' "$file")"
       if [ -z "$line" ]; then
         echo "alias not found: $mj_alias" >&2
         return 1
@@ -341,6 +526,7 @@ mj() {
       if [[ "$rest" = *"  # "* ]]; then
         local cmd_part="${rest%%  # *}"
         local desc_part="${rest#*  # }"
+        desc_part="${desc_part%%  ##i:*}"
         echo "alias: $alias_part"
         echo "command: $cmd_part"
         echo "description: $desc_part"
@@ -413,16 +599,13 @@ mj() {
       fi
       ;;
     *)
-      echo "usage: mj {add|add-cmd|list|use|remove|describe|ctx|<alias>}" >&2
-      echo "  mj ctx [<type>|clear]                    # set/show context" >&2
-      echo "  mj add [<type>] <alias>                 # add last command (uses context if type omitted)" >&2
-      echo "  mj add-cmd <type> <alias> \"<cmd>\" [--i <param>] [--d \"<desc>\"]" >&2
-      echo "  mj list [<type> [--c]]                   # list (uses context if type omitted)" >&2
-      echo "  mj use [<type>] <alias> [param=value]    # use (uses context if type omitted)" >&2
-      echo "  mj <alias> [args...]                     # use alias in current context (if context set)" >&2
-      echo "  mj remove <type> <alias>" >&2
-      echo "  mj describe <type> <alias>" >&2
-      return 2
+      if [ -z "$cmd" ]; then
+        _mj_tui_loop
+      else
+        echo "unknown command: $cmd" >&2
+        echo "usage: mj {add|add-cmd|list|use|remove|describe|ctx|<alias>}" >&2
+        return 2
+      fi
       ;;
   esac
 }

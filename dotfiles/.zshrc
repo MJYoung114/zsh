@@ -1,5 +1,5 @@
 # Setup completion path before loading anything
-fpath=(~/.zsh/completion "$HOME/.config" $fpath)
+fpath=(~/.zsh/completion "$HOME/.config" "$HOME/Public/Ai" $fpath)
 
 # Oh My Zsh (if installed)
 if [ -d "$HOME/.oh-my-zsh" ]; then
@@ -20,6 +20,9 @@ export FZFZ_SUBDIR_LIMIT=1
 [ -f "$HOME/.config/shortcutrc" ] && source "$HOME/.config/shortcutrc"
 [ -f "$HOME/.config/aliasrc" ] && source "$HOME/.config/aliasrc"
 [ -f "$HOME/.config/functionsrc" ] && source "$HOME/.config/functionsrc"
+
+# Claude Code launcher (`cc`) lives outside this repo
+[ -r "$HOME/Public/Ai/cc.zsh" ] && source "$HOME/Public/Ai/cc.zsh"
 
 # Ensure Homebrew bin on PATH for non-login shells (so fnm is discoverable)
 if [[ "$OSTYPE" == darwin* ]] && [ -d "/opt/homebrew/bin" ]; then
