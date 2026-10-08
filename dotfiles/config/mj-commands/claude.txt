@@ -5,3 +5,6 @@ pull	git -C "$HOME/Public/envio/wiki" pull --ff-only  # update team wiki before 
 gap	cc wiki -P gap  # read-only diff of v2 vs wiki, lists missing pages
 port	cc wiki -P port -A <path>  # port one v2 page into wiki format, path=x  ##i:path
 refresh	cc v2 -P refresh  # re-verify v2 README, CLAUDE.md and Source headers
+debug	cc incident -R debug -n inc-<id>  # read-only incident agent; paste the alert after it opens, id=x  ##i:id
+review	cc hosted -R review -n review-<name>  # read-only code review agent, name=x  ##i:name
+feature	cc hosted -R feature -w <name> -n envio-cloud-<name>  # feature agent in its own worktree, name=x  ##i:name
